@@ -8,10 +8,12 @@ import toast from 'react-hot-toast';
 export default function ProductCard({ product, index = 0 }) {
   const { addItem, isInCart } = useCart();
   const [imgError, setImgError] = useState(false);
+  const [currentImg, setCurrentImg] = useState(0);
   const discount = Math.round((1 - product.price / product.originalPrice) * 100);
   const stars = '★'.repeat(Math.floor(product.rating));
   const inCart = isInCart(product.id);
-  const hasExternalImage = product.image && product.image.startsWith('http') && !imgError;
+  const images = product.images || (product.image ? [product.image] : []);
+  const hasExternalImage = images.length > 0 && images[currentImg]?.startsWith('http') && !imgError;
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -41,10 +43,10 @@ export default function ProductCard({ product, index = 0 }) {
 
         {/* Image */}
         <Link href={`/products/${product.id}`}>
-          <div className="w-full h-52 bg-gray-50 flex items-center justify-center overflow-hidden cursor-pointer">
+          <div className="w-full h-52 bg-gray-50 flex items-center justify-center overflow-hidden cursor-pointer relative">
             {hasExternalImage ? (
               <img
-                src={product.image}
+                src={images[currentImg]}
                 alt={product.title}
                 className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300 p-2"
                 onError={() => setImgError(true)}
@@ -53,6 +55,18 @@ export default function ProductCard({ product, index = 0 }) {
               <span className="text-6xl group-hover:scale-110 transition-transform duration-300">
                 {product.emoji}
               </span>
+            )}
+            {/* Image dots */}
+            {images.length > 1 && (
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                {images.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentImg(i); }}
+                    className={`w-2 h-2 rounded-full transition-all ${i === currentImg ? 'bg-blue-600 w-4' : 'bg-gray-300 hover:bg-gray-400'}`}
+                  />
+                ))}
+              </div>
             )}
           </div>
         </Link>

@@ -14,7 +14,9 @@ export default function ProductPage() {
   const product = getProductById(id);
   const { addItem, isInCart } = useCart();
   const [imgError, setImgError] = useState(false);
-  const hasExternalImage = product?.image && product.image.startsWith('http') && !imgError;
+  const [currentImg, setCurrentImg] = useState(0);
+  const images = product?.images || (product?.image ? [product.image] : []);
+  const hasExternalImage = images.length > 0 && images[currentImg]?.startsWith('http') && !imgError;
 
   if (!product) {
     return (
@@ -65,8 +67,8 @@ export default function ProductPage() {
       {/* Product Detail */}
       <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-          {/* Image */}
-          <div className="bg-gray-50 flex items-center justify-center p-12 min-h-[400px] relative">
+          {/* Image Gallery */}
+          <div className="bg-gray-50 flex flex-col items-center justify-center p-8 min-h-[400px] relative">
             <span
               className={`absolute top-4 right-4 ${
                 product.badgeType === 'new'
@@ -74,19 +76,59 @@ export default function ProductPage() {
                   : product.badgeType === 'hot'
                   ? 'bg-orange-500'
                   : 'bg-red-500'
-              } text-white text-sm font-bold px-4 py-1.5 rounded-full`}
+              } text-white text-sm font-bold px-4 py-1.5 rounded-full z-10`}
             >
               {product.badge}
             </span>
-            {hasExternalImage ? (
-              <img
-                src={product.image}
-                alt={product.title}
-                className="max-h-64 object-contain"
-                onError={() => setImgError(true)}
-              />
-            ) : (
-              <span className="text-[8rem]">{product.emoji}</span>
+            {/* Main Image */}
+            <div className="flex-1 flex items-center justify-center w-full relative">
+              {hasExternalImage ? (
+                <img
+                  src={images[currentImg]}
+                  alt={product.title}
+                  className="max-h-64 object-contain transition-opacity duration-300"
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <span className="text-[8rem]">{product.emoji}</span>
+              )}
+              {/* Arrow buttons */}
+              {images.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setCurrentImg((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white shadow-md rounded-full w-9 h-9 flex items-center justify-center text-gray-600 hover:text-blue-600 transition-all"
+                  >
+                    ›
+                  </button>
+                  <button
+                    onClick={() => setCurrentImg((prev) => (prev === images.length - 1 ? 0 : prev + 1))}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white shadow-md rounded-full w-9 h-9 flex items-center justify-center text-gray-600 hover:text-blue-600 transition-all"
+                  >
+                    ‹
+                  </button>
+                </>
+              )}
+            </div>
+            {/* Thumbnails */}
+            {images.length > 1 && (
+              <div className="flex gap-2 mt-4">
+                {images.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentImg(i)}
+                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                      i === currentImg ? 'border-blue-600 shadow-md' : 'border-gray-200 hover:border-gray-400'
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${product.title} - ${i + 1}`}
+                      className="w-full h-full object-contain bg-white p-1"
+                    />
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 
